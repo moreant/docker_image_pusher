@@ -7,6 +7,6 @@
 
 #node:22.22.1
 #maven:3.9.12-eclipse-temurin-8
-node:18
-node:14.21.3
+#node:18
+#node:14.21.3
 gradle:7.6.4-jdk8
