@@ -11,4 +11,5 @@
 #node:14.21.3
 #gradle:7.6.4-jdk8
 #node:16.20.2
-eclipse-temurin:21.0.10_7-jre
+#eclipse-temurin:21.0.10_7-jre
+3.9.14-eclipse-temurin-21
