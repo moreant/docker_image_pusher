@@ -60,9 +60,48 @@ shrimp-images 即 ALIYUN_NAME_SPACE(阿里云命名空间)<br>
 alpine 即 阿里云中显示的镜像名<br>
 
 ### 多架构
+
+#### 方式一：独立架构镜像（旧方式）
 需要在images.txt中用 --platform=xxxxx手动指定镜像架构
 指定后的架构会以前缀的形式放在镜像名字前面
 ![](doc/多架构.png)
+
+#### 方式二：多架构 Manifest（新方式）
+使用 `[manifest:NAME:TAG]...[end]` 语法创建多架构镜像，用户只需拉取一个统一的 tag，Docker 会自动选择正确架构。
+
+**语法格式：**
+```txt
+[manifest:nginx:alpine]
+--platform=linux/amd64 nginx:alpine
+--platform=linux/arm64 nginx:alpine
+[end]
+```
+
+**示例：**
+```txt
+# 单架构镜像（向后兼容）
+nginx:1.29.8-alpine
+
+# 多架构 manifest - 同一源镜像不同架构
+[manifest:nginx:latest]
+--platform=linux/amd64 nginx:latest
+--platform=linux/arm64 nginx:latest
+[end]
+
+# 多架构 manifest - 不同源镜像
+[manifest:redis:latest]
+--platform=linux/amd64 redis:latest
+--platform=linux/arm64 arm64v8/redis:latest
+[end]
+```
+
+**使用效果：**
+```bash
+# 拉取时会自动选择正确架构
+docker pull registry.cn-hangzhou.aliyuncs.com/namespace/nginx:alpine
+# AMD64 服务器自动拉取 amd64 版本
+# ARM64 服务器自动拉取 arm64 版本
+```
 
 ### 镜像重名
 程序自动判断是否存在名称相同, 但是属于不同命名空间的情况。

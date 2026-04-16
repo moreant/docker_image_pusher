@@ -58,16 +58,54 @@ jobs:
     - name: Build and push image Aliyun
       run: |
         docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
-        # 数据预处理,判断镜像是否重名
+
+        # ===== 新增：解析 manifest 组 =====
+        declare -A manifest_groups
+        declare -a manifest_names
+        current_manifest=""
+
+        while IFS= read -r line || [ -n "$line" ]; do
+            [[ -z "$line" ]] && continue
+            echo "$line" | grep -q '^\s*#' && continue
+
+            # 检测 manifest 块开始
+            if echo "$line" | grep -qE '^\[manifest:'; then
+                current_manifest=$(echo "$line" | sed -E 's/^\[manifest:([^]]+)\].*/\1/')
+                manifest_names+=("$current_manifest")
+                manifest_groups[$current_manifest]=""
+                continue
+            fi
+
+            # 检测 manifest 块结束
+            echo "$line" | grep -qE '^\[end\]' && { current_manifest=""; continue; }
+
+            # 如果在 manifest 块内
+            if [[ -n "$current_manifest" ]]; then
+                platform=$(echo "$line" | awk -F'--platform[ =]' '{if (NF>1) print $2}' | awk '{print $1}')
+                image=$(echo "$line" | awk '{print $NF}')
+                manifest_groups[$current_manifest]+="${platform}|${image} "
+            fi
+        done < images.txt
+        echo "Parsed manifest groups: ${manifest_names[@]}"
+
+        # ===== 数据预处理，判断镜像是否重名 =====
         declare -A duplicate_images
         declare -A temp_map
+        in_manifest_block=""
         while IFS= read -r line || [ -n "$line" ]; do
             # 忽略空行与注释
             [[ -z "$line" ]] && continue
             if echo "$line" | grep -q '^\s*#'; then
                 continue
             fi
-            
+
+            # 跳过 manifest 块开始/结束标记
+            echo "$line" | grep -qE '^\[manifest:' && { in_manifest_block="true"; continue; }
+            echo "$line" | grep -qE '^\[end\]' && { in_manifest_block=""; continue; }
+
+            # 跳过 manifest 块内容
+            [[ -n "$in_manifest_block" ]] && continue
+
             # 获取镜像的完整名称，例如kasmweb/nginx:1.25.3（命名空间/镜像名:版本号）
             image=$(echo "$line" | awk '{print $NF}')
             # 将@sha256:等字符删除
@@ -97,15 +135,22 @@ jobs:
                 temp_map[$image_name]=$name_space
             fi       
         done < images.txt
-        
-        
+
+
+        # ===== 处理单架构镜像 =====
+        in_manifest_block=""
         while IFS= read -r line || [ -n "$line" ]; do
             # 忽略空行与注释
             [[ -z "$line" ]] && continue
             if echo "$line" | grep -q '^\s*#'; then
                 continue
             fi
-        
+
+            # 跳过 manifest 块
+            echo "$line" | grep -qE '^\[manifest:' && { in_manifest_block="true"; continue; }
+            echo "$line" | grep -qE '^\[end\]' && { in_manifest_block=""; continue; }
+            [[ -n "$in_manifest_block" ]] && continue
+
             echo "docker pull $line"
             docker pull $line
             platform=$(echo "$line" | awk -F'--platform[ =]' '{if (NF>1) print $2}' | awk '{print $1}')
@@ -152,6 +197,52 @@ jobs:
             echo "磁盘空间清理完毕"
             echo "=============================================================================="
             df -hT
-            echo "=============================================================================="     
-            
+            echo "=============================================================================="
+
+
         done < images.txt
+
+
+        # ===== 处理多架构 manifest =====
+        for manifest_name in "${manifest_names[@]}"; do
+            items="${manifest_groups[$manifest_name]}"
+            echo "===== Creating manifest: $manifest_name ====="
+
+            # 收集已推送的架构 tag
+            manifest_sources=""
+
+            for item in $items; do
+                platform=$(echo "$item" | cut -d'|' -f1)
+                image=$(echo "$item" | cut -d'|' -f2)
+
+                echo "Pulling $image for platform $platform"
+                docker pull --platform=$platform $image
+
+                # 生成临时 tag（架构后缀）
+                image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
+                image_name_tag="${image_name_tag%%@*}"
+                arch_suffix=$(echo "$platform" | sed 's|linux/||' | sed 's|/|_|g')
+                temp_tag="${arch_suffix}_${image_name_tag}"
+
+                # 推送临时架构 tag
+                new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$temp_tag"
+                echo "Tagging and pushing: $new_image"
+                docker tag $image $new_image
+                docker push $new_image
+
+                manifest_sources+="$new_image "
+
+                # 清理本地镜像
+                docker rmi $image $new_image 2>/dev/null || true
+            done
+
+            # 创建并推送 manifest
+            manifest_target="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$manifest_name"
+            echo "Creating manifest: $manifest_target"
+            docker manifest create $manifest_target $manifest_sources
+            echo "Pushing manifest: $manifest_target"
+            docker manifest push $manifest_target
+
+            echo "Manifest $manifest_name created successfully!"
+            echo "=============================================================================="
+        done
