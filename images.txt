@@ -13,8 +13,11 @@
 #node:16.20.2
 #eclipse-temurin:21.0.10_7-jre
 #maven:3.9.14-eclipse-temurin-21
-#nginx:1.29.8
-[manifest:nginx:1.29.8-alpine]
---platform=linux/amd64 nginx:1.29.8-alpine
---platform=linux/arm64 nginx:1.29.8-alpine
+[manifest:node:22.22.1]
+--platform=linux/amd64 node:22.22.1
+--platform=linux/arm64 node:22.22.1
 [end]
+#[manifest:nginx:1.29.8-alpine]
+#--platform=linux/amd64 nginx:1.29.8-alpine
+#--platform=linux/arm64 nginx:1.29.8-alpine
+#[end]
