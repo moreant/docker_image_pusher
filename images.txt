@@ -23,5 +23,4 @@
 #[end]
 [manifest:xuxueli/xxl-job-admin:3.4.0]
 --platform=linux/amd64 xuxueli/xxl-job-admin:3.4.0
---platform=linux/arm64 xuxueli/xxl-job-admin:3.4.0
 [end]
