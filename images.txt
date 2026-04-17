@@ -21,6 +21,4 @@
 #--platform=linux/amd64 nginx:1.29.8-alpine
 #--platform=linux/arm64 nginx:1.29.8-alpine
 #[end]
-[manifest:xuxueli/xxl-job-admin:3.4.0]
---platform=linux/amd64 xuxueli/xxl-job-admin:3.4.0
-[end]
+docker.io/xuxueli/xxl-job-admin:3.4.0
