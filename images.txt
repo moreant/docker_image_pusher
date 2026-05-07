@@ -21,4 +21,8 @@
 #--platform=linux/amd64 nginx:1.29.8-alpine
 #--platform=linux/arm64 nginx:1.29.8-alpine
 #[end]
-docker.io/xuxueli/xxl-job-admin:3.4.0
+#docker.io/xuxueli/xxl-job-admin:3.4.0
+[manifest:maven:3.9.14-eclipse-temurin-21]
+--platform=linux/amd64 maven:3.9.14-eclipse-temurin-21
+--platform=linux/arm64 maven:3.9.14-eclipse-temurin-21
+[end]
