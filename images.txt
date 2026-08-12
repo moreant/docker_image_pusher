@@ -13,10 +13,10 @@
 #node:16.20.2
 #eclipse-temurin:21.0.10_7-jre
 #maven:3.9.14-eclipse-temurin-21
-#[manifest:node:14.21.3]
-#--platform=linux/amd64 node:14.21.3
-#--platform=linux/arm64 node:14.21.3
-#[end]
+[manifest:node:14.21.3]
+--platform=linux/amd64 node:14.21.3
+--platform=linux/arm64 node:14.21.3
+[end]
 #[manifest:nginx:1.29.8-alpine]
 #--platform=linux/amd64 nginx:1.29.8-alpine
 #--platform=linux/arm64 nginx:1.29.8-alpine
