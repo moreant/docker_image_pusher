@@ -13,9 +13,9 @@
 #node:16.20.2
 #eclipse-temurin:21.0.10_7-jre
 #maven:3.9.14-eclipse-temurin-21
-#[manifest:node:20.15.0]
-#--platform=linux/amd64 node:20.15.0
-#--platform=linux/arm64 node:20.15.0
+#[manifest:node:14.21.3]
+#--platform=linux/amd64 node:14.21.3
+#--platform=linux/arm64 node:14.21.3
 #[end]
 #[manifest:nginx:1.29.8-alpine]
 #--platform=linux/amd64 nginx:1.29.8-alpine
@@ -26,7 +26,7 @@
 #--platform=linux/amd64 maven:3.9.14-eclipse-temurin-21
 #--platform=linux/arm64 maven:3.9.14-eclipse-temurin-21
 #[end]
-[manifest:gradle:8.14.2-jdk8]
---platform=linux/amd64 gradle:8.14.2-jdk8
---platform=linux/arm64 gradle:8.14.2-jdk8
-[end]
+#[manifest:gradle:8.14.2-jdk8]
+#--platform=linux/amd64 gradle:8.14.2-jdk8
+#--platform=linux/arm64 gradle:8.14.2-jdk8
+#[end]
